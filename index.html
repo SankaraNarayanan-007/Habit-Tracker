@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Routinely</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:-apple-system,system-ui,sans-serif;
+            background:linear-gradient(135deg,#2c3e50,#3498db);
+            min-height:100vh;
+            padding:20px;
+        }
+        .container{
+            max-width:800px;
+            margin:0 auto;
+        }
+        .header{
+            background:white;
+            border-radius:20px;
+            padding:30px;
+            margin-bottom:20px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.2);
+            background:linear-gradient(135deg,#667eea,#764ba2);
+            color:white;
+        }
+        .header h1{
+            text-align:center;
+            margin-bottom:10px;
+            font-size:28px;
+            font-weight:600;
+            text-shadow:2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .header .sub{
+            text-align:center;
+            font-size:14px;
+            opacity:0.9;
+        }
+        .add-btn{
+            width:100%;
+            padding:15px;
+            background:white;
+            color:#667eea;
+            border:none;
+            border-radius:10px;
+            font-size:16px;
+            font-weight:600;
+            cursor:pointer;
+            margin-top:15px;
+            transition:0.2s;
+        }
+        .add-btn:hover{
+            transform:scale(1.02);
+            box-shadow:0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* Habits Section - Full width */
+        .habits-section{
+            background:white;
+            border-radius:20px;
+            padding:25px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.2);
+        }
+        h2{margin-bottom:20px;color:#333;}
+        
+        .habit-list{list-style:none;}
+        .habit-item{
+            background:#f8f9fa;
+            border-radius:10px;
+            margin-bottom:10px;
+            border:2px solid transparent;
+            transition:0.2s;
+        }
+        .habit-item.selected{
+            border-color:#667eea;
+        }
+        .habit-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:15px;
+            cursor:pointer;
+        }
+        .habit-header:hover{background:#e9ecef; border-radius:8px;}
+        .habit-name{
+            font-weight:600;
+            font-size:16px;
+        }
+        .habit-details{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+        .badge{
+            padding:4px 10px;
+            border-radius:20px;
+            font-size:12px;
+            font-weight:600;
+        }
+        .streak{background:#ed8936;color:white;}
+        .schedule{background:#667eea20;color:#667eea;}
+        .rest{background:#9f7aea20;color:#9f7aea;}
+        .reminder{background:#48bb7820;color:#48bb78;}
+        .reminder-time{
+            font-size:10px;
+            margin-left:2px;
+            opacity:0.8;
+        }
+        
+        .habit-actions{
+            display:flex;
+            gap:8px;
+        }
+        .edit,.delete,.mark-done{
+            padding:6px 12px;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:13px;
+            font-weight:500;
+            transition:0.2s;
+        }
+        .edit{background:#48bb78;color:white;}
+        .edit:hover{background:#3c9e5e;}
+        .delete{background:#f56565;color:white;}
+        .delete:hover{background:#d64545;}
+        .mark-done{background:#667eea;color:white;}
+        .mark-done.completed{background:#48bb78;}
+        .mark-done:hover{transform:scale(1.05);}
+        
+        /* Calendar Dropdown - Split View */
+        .calendar-dropdown{
+            background:#f0f2f5;
+            border-radius:0 0 10px 10px;
+            padding:20px;
+            border-top:2px solid #667eea;
+            display:none;
+        }
+        .calendar-dropdown.show{display:block;}
+        
+        .dropdown-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:15px;
+            color:#667eea;
+            font-weight:600;
+        }
+        .close-dropdown{
+            background:none;
+            border:none;
+            font-size:18px;
+            cursor:pointer;
+            color:#999;
+        }
+        .close-dropdown:hover{color:#333;}
+        
+        /* Chart Type Selector */
+        .chart-selector{
+            display:flex;
+            gap:10px;
+            margin-bottom:15px;
+            justify-content:center;
+        }
+        .chart-option{
+            padding:6px 16px;
+            border:2px solid #667eea;
+            border-radius:20px;
+            font-size:13px;
+            font-weight:600;
+            cursor:pointer;
+            color:#667eea;
+            background:white;
+            transition:0.2s;
+        }
+        .chart-option:hover{
+            background:#667eea20;
+        }
+        .chart-option.active{
+            background:#667eea;
+            color:white;
+        }
+        
+        /* Split View Layout */
+        .split-view{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:15px;
+            margin-top:10px;
+        }
+        
+        /* Left Side - Calendar (Smaller) */
+        .calendar-side{
+            background:white;
+            border-radius:10px;
+            padding:12px;
+        }
+        .calendar-grid{
+            display:grid;
+            grid-template-columns:repeat(7,1fr);
+            gap:3px;
+            margin:10px 0;
+        }
+        .calendar-day{
+            aspect-ratio:1;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#f8f9fa;
+            border-radius:6px;
+            font-size:12px;
+            font-weight:600;
+            cursor:pointer;
+            border:1px solid transparent;
+            transition:0.2s;
+            position:relative;
+            color:#333;
+        }
+        .calendar-day.today{border-color:#667eea;background:#ebf4ff;}
+        .calendar-day.completed{background:#48bb78;color:white;}
+        .calendar-day.missed{background:#f56565;color:white;}
+        .calendar-day.rest{background:#9f7aea;color:white;}
+        .calendar-day.start-date{
+            border:2px solid #fbbf24 !important;
+        }
+        .calendar-day.start-date.completed{
+            background:#48bb78 !important;
+            color:white !important;
+            border:2px solid #fbbf24 !important;
+        }
+        .calendar-day.start-date.rest{
+            background:#9f7aea !important;
+            color:white !important;
+            border:2px solid #fbbf24 !important;
+        }
+        .calendar-day.start-date.missed{
+            background:#f8f9fa !important;
+            color:#333 !important;
+            border:2px solid #fbbf24 !important;
+        }
+        .calendar-day.disabled{
+            opacity:0.5;
+            cursor:not-allowed;
+            background:#e0e0e0;
+            color:#666;
+        }
+        .calendar-day.disabled:hover{transform:none;}
+        .calendar-day:hover:not(.disabled){transform:scale(1.05);}
+        
+        .weekdays{
+            display:grid;
+            grid-template-columns:repeat(7,1fr);
+            gap:3px;
+            text-align:center;
+            font-weight:600;
+            color:#666;
+            font-size:10px;
+            margin-bottom:5px;
+        }
+        .month-nav{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin:8px 0;
+        }
+        .month-btn{
+            background:#667eea;
+            color:white;
+            border:none;
+            border-radius:4px;
+            padding:3px 8px;
+            cursor:pointer;
+            font-size:11px;
+            transition:0.2s;
+        }
+        .month-btn:hover{
+            background:#5a67d8;
+        }
+        .month-title{
+            font-size:12px;
+            font-weight:600;
+            color:#333;
+        }
+        
+        /* Right Side - Charts */
+        .charts-side{
+            background:white;
+            border-radius:10px;
+            padding:12px;
+        }
+        .chart-container{
+            height:180px;
+            margin-bottom:5px;
+            position:relative;
+        }
+        .chart-title{
+            font-size:12px;
+            font-weight:600;
+            color:#666;
+            margin-bottom:8px;
+            text-align:center;
+        }
+        
+        .dropdown-stats{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:8px;
+            margin-top:10px;
+        }
+        .stat-card{
+            background:white;
+            padding:6px;
+            border-radius:6px;
+            text-align:center;
+        }
+        .stat-value{font-size:14px;font-weight:600;color:#667eea;}
+        .stat-label{font-size:9px;color:#999;margin-top:2px;}
+        
+        .empty{text-align:center;color:#999;padding:40px;}
+        
+        /* Modal */
+        .modal{
+            display:none;
+            position:fixed;
+            top:0;left:0;right:0;bottom:0;
+            background:rgba(0,0,0,0.5);
+            justify-content:center;
+            align-items:center;
+            z-index:1000;
+            backdrop-filter:blur(3px);
+        }
+        .modal.active{display:flex;}
+        .modal-content{
+            background:white;
+            border-radius:20px;
+            padding:30px;
+            width:90%;
+            max-width:500px;
+            max-height:90vh;
+            overflow-y:auto;
+            animation:modalIn 0.3s;
+        }
+        @keyframes modalIn{
+            from{transform:scale(0.9);opacity:0;}
+            to{transform:scale(1);opacity:1;}
+        }
+        .modal input,.modal select{
+            width:100%;
+            padding:12px;
+            margin:5px 0 15px;
+            border:2px solid #e0e0e0;
+            border-radius:10px;
+            font-size:15px;
+            transition:0.2s;
+        }
+        .modal input:focus,.modal select:focus{
+            outline:none;
+            border-color:#667eea;
+        }
+        .modal-actions{
+            display:flex;
+            gap:10px;
+            margin-top:20px;
+        }
+        .modal-actions button{
+            flex:1;
+            padding:12px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:600;
+            transition:0.2s;
+        }
+        .save{background:#667eea;color:white;}
+        .save:hover{background:#5a67d8;}
+        .cancel{background:#e0e0e0;color:#666;}
+        .cancel:hover{background:#d0d0d0;}
+        
+        .radio-group{
+            display:flex;
+            gap:10px;
+            margin:10px 0;
+        }
+        .radio-group label{
+            flex:1;
+            text-align:center;
+            padding:10px;
+            background:#f8f9fa;
+            border:2px solid #e0e0e0;
+            border-radius:8px;
+            cursor:pointer;
+            transition:0.2s;
+        }
+        .radio-group label:hover{
+            background:#e9ecef;
+        }
+        .radio-group input{display:none;}
+        .radio-group input:checked+label{
+            background:#667eea;
+            color:white;
+            border-color:#667eea;
+        }
+        
+        .day-selector{
+            display:grid;
+            grid-template-columns:repeat(7,1fr);
+            gap:5px;
+            margin:15px 0;
+            max-height:200px;
+            overflow-y:auto;
+        }
+        .day-selector div{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            font-size:12px;
+        }
+        .day-selector input[type="checkbox"]{
+            width:18px;
+            height:18px;
+            cursor:pointer;
+            margin:0;
+        }
+        
+        /* Rest Days Section - Custom Days */
+        .rest-section{
+            background:#f8f9fa;
+            border-radius:10px;
+            padding:15px;
+            margin:15px 0;
+        }
+        .rest-type-selector{
+            margin-bottom:15px;
+        }
+        .rest-type-selector select{
+            width:100%;
+            padding:10px;
+            border:2px solid #e0e0e0;
+            border-radius:8px;
+            font-size:14px;
+        }
+        .custom-days-selector{
+            margin-top:15px;
+            padding-top:15px;
+            border-top:2px dashed #e0e0e0;
+        }
+        .custom-days-selector h4{
+            font-size:14px;
+            color:#666;
+            margin-bottom:10px;
+        }
+        .day-checkbox-group{
+            display:grid;
+            grid-template-columns:repeat(7,1fr);
+            gap:8px;
+            margin-bottom:10px;
+        }
+        .day-checkbox-item{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:5px;
+        }
+        .day-checkbox-item input[type="checkbox"]{
+            width:20px;
+            height:20px;
+            cursor:pointer;
+        }
+        .day-checkbox-item label{
+            font-size:11px;
+            font-weight:600;
+            color:#666;
+        }
+        .rest-logic{
+            background:#ebf4ff;
+            padding:10px;
+            border-radius:8px;
+            font-size:13px;
+            color:#667eea;
+            margin-top:10px;
+        }
+        
+        /* Reminder Section - Left Text, Right Toggle */
+        .reminder-section{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin:15px 0;
+            padding:10px;
+            background:#f8f9fa;
+            border-radius:10px;
+        }
+        .reminder-text{
+            font-weight:600;
+            color:#333;
+        }
+        .reminder-text small{
+            font-weight:normal;
+            font-size:11px;
+            color:#666;
+            display:block;
+            margin-top:2px;
+        }
+        .reminder-toggle-switch{
+            position:relative;
+            display:inline-block;
+            width:50px;
+            height:24px;
+        }
+        .reminder-toggle-switch input{
+            opacity:0;
+            width:0;
+            height:0;
+        }
+        .toggle-slider{
+            position:absolute;
+            cursor:pointer;
+            top:0;
+            left:0;
+            right:0;
+            bottom:0;
+            background-color:#ccc;
+            transition:.3s;
+            border-radius:24px;
+        }
+        .toggle-slider:before{
+            position:absolute;
+            content:"";
+            height:18px;
+            width:18px;
+            left:3px;
+            bottom:3px;
+            background-color:white;
+            transition:.3s;
+            border-radius:50%;
+        }
+        input:checked + .toggle-slider{
+            background-color:#667eea;
+        }
+        input:checked + .toggle-slider:before{
+            transform:translateX(26px);
+        }
+        
+        /* Custom Time Picker - Any Minute */
+        .time-picker-group{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            margin:15px 0 10px;
+        }
+        .time-picker-group select{
+            flex:1;
+            padding:10px;
+            border:2px solid #e0e0e0;
+            border-radius:8px;
+            font-size:14px;
+            background:white;
+        }
+        .minute-selector{
+            max-height:200px;
+            overflow-y:auto;
+        }
+        .minute-selector option{
+            padding:5px;
+        }
+        .reminder-note{
+            font-size:11px;
+            color:#666;
+            margin-top:5px;
+            font-style:italic;
+            background:#ebf4ff;
+            padding:8px;
+            border-radius:6px;
+        }
+        
+        .footer{text-align:center;margin-top:20px;color:rgba(255,255,255,0.8);}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Routinely</h1>
+            <div class="sub">track · build · maintain</div>
+            <button class="add-btn" id="addBtn">+ Create New Habit</button>
+        </div>
+
+        <!-- Habits Section -->
+        <div class="habits-section">
+            <h2>Your Habits</h2>
+            <div id="habitList" class="habit-list"></div>
+        </div>
+        
+        <div class="footer">Routinely · small steps, big changes</div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">New Habit</h3>
+            <input type="text" id="habitName" placeholder="Habit name">
+            
+            <div class="radio-group">
+                <input type="radio" name="schedule" id="daily" value="daily" checked><label for="daily">Daily</label>
+                <input type="radio" name="schedule" id="weekly" value="weekly"><label for="weekly">Weekly</label>
+                <input type="radio" name="schedule" id="monthly" value="monthly"><label for="monthly">Monthly</label>
+            </div>
+
+            <div id="weeklySelector" style="display:none">
+                <div class="day-selector">
+                    <div><input type="checkbox" id="sun" value="0"><label>Su</label></div>
+                    <div><input type="checkbox" id="mon" value="1"><label>Mo</label></div>
+                    <div><input type="checkbox" id="tue" value="2"><label>Tu</label></div>
+                    <div><input type="checkbox" id="wed" value="3"><label>We</label></div>
+                    <div><input type="checkbox" id="thu" value="4"><label>Th</label></div>
+                    <div><input type="checkbox" id="fri" value="5"><label>Fr</label></div>
+                    <div><input type="checkbox" id="sat" value="6"><label>Sa</label></div>
+                </div>
+            </div>
+
+            <div id="monthlySelector" style="display:none">
+                <div class="day-selector" id="monthDays"></div>
+            </div>
+
+            <!-- Rest Days Section with Custom Days -->
+            <div class="rest-section">
+                <div class="rest-type-selector">
+                    <select id="restType">
+                        <option value="none">No rest days</option>
+                        <option value="weekends">Weekends only</option>
+                        <option value="custom">Custom days</option>
+                    </select>
+                </div>
+                
+                <div id="customDaysSelector" class="custom-days-selector" style="display:none;">
+                    <h4>Select rest days:</h4>
+                    <div class="day-checkbox-group">
+                        <div class="day-checkbox-item">
+                            <input type="checkbox" id="restSun" value="0">
+                            <label for="restSun">Sun</label>
+                        </div>
+                        <div class="day-checkbox-item">
+                            <input type="checkbox" id="restMon" value="1">
+                            <label for="restMon">Mon</label>
+                        </div>
+                        <div class="day-checkbox-item">
+                            <input type="checkbox" id="restTue" value="2">
+                            <label for="restTue">Tue</label>
+                        </div>
+                        <div class="day-checkbox-item">
+                            <input type="checkbox" id="restWed" value="3">
+                            <label for="restWed">Wed</label>
+                        </div>
+                        <div class="day-checkbox-item">
+                            <input type="checkbox" id="restThu" value="4">
+                            <label for="restThu">Thu</label>
+                        </div>
+                        <div class="day-checkbox-item">
+                            <input type="checkbox" id="restFri" value="5">
+                            <label for="restFri">Fri</label>
+                        </div>
+                        <div class="day-checkbox-item">
+                            <input type="checkbox" id="restSat" value="6">
+                            <label for="restSat">Sat</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="rest-logic" id="restLogic"></div>
+            </div>
+
+            <!-- Reminder Section - Left Text, Right Toggle -->
+            <div class="reminder-section">
+                <div class="reminder-text">
+                    🔔 Daily Reminder
+                    <small>Get browser notifications</small>
+                </div>
+                <label class="reminder-toggle-switch">
+                    <input type="checkbox" id="reminderToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <!-- Time Picker (shows when reminder enabled) -->
+            <div id="reminderSettings" style="display:none;">
+                <div class="time-picker-group">
+                    <select id="reminderHour">
+                        <option value="">Hour</option>
+                        <option value="0">12 AM</option><option value="1">1 AM</option><option value="2">2 AM</option>
+                        <option value="3">3 AM</option><option value="4">4 AM</option><option value="5">5 AM</option>
+                        <option value="6">6 AM</option><option value="7">7 AM</option><option value="8">8 AM</option>
+                        <option value="9">9 AM</option><option value="10">10 AM</option><option value="11">11 AM</option>
+                        <option value="12">12 PM</option><option value="13">1 PM</option><option value="14">2 PM</option>
+                        <option value="15">3 PM</option><option value="16">4 PM</option><option value="17">5 PM</option>
+                        <option value="18">6 PM</option><option value="19">7 PM</option><option value="20">8 PM</option>
+                        <option value="21">9 PM</option><option value="22">10 PM</option><option value="23">11 PM</option>
+                    </select>
+                    <select id="reminderMinute" class="minute-selector" size="1">
+                        <option value="">Minute</option>
+                        <!-- Will be populated by JavaScript with all minutes -->
+                    </select>
+                </div>
+                <div class="reminder-note">
+                    ⏰ You'll get a browser notification daily at this time
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="cancel" id="cancelBtn">Cancel</button>
+                <button class="save" id="saveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== NOTIFICATION SETUP ====================
+        
+        // Request notification permission on load
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
+
+        // Store active timeouts for reminders
+        let reminderTimeouts = {};
+
+        // Format time for display
+        function formatReminderTime(hour, minute) {
+            if (hour === undefined || minute === undefined) return '';
+            let period = hour >= 12 ? 'PM' : 'AM';
+            let displayHour = hour % 12 || 12;
+            return `${displayHour}:${minute.toString().padStart(2,'0')} ${period}`;
+        }
+
+        // Schedule reminder for a habit
+        function scheduleReminder(habit) {
+            // Clear existing reminder if any
+            if (reminderTimeouts[habit.id]) {
+                clearTimeout(reminderTimeouts[habit.id]);
+            }
+
+            if (!habit.reminder || habit.reminderHour === undefined || habit.reminderMinute === undefined) {
+                return;
+            }
+
+            const now = new Date();
+            const reminderTime = new Date();
+            reminderTime.setHours(habit.reminderHour, habit.reminderMinute, 0, 0);
+
+            // If time has passed today, schedule for tomorrow
+            if (reminderTime <= now) {
+                reminderTime.setDate(reminderTime.getDate() + 1);
+            }
+
+            const timeUntilReminder = reminderTime - now;
+
+            reminderTimeouts[habit.id] = setTimeout(() => {
+                // Check if habit was already completed today
+                const today = new Date().toDateString();
+                if (!habit.history?.[today]) {
+                    // Show notification
+                    new Notification('📋 Routinely Reminder', {
+                        body: `Time to: ${habit.text}`,
+                        icon: '📋',
+                        silent: false,
+                        tag: `habit-${habit.id}`,
+                        requireInteraction: true
+                    });
+
+                    // Also log to console for debugging
+                    console.log(`Reminder sent for: ${habit.text}`);
+                }
+
+                // Schedule next day's reminder
+                scheduleReminder(habit);
+            }, timeUntilReminder);
+
+            console.log(`Reminder scheduled for ${habit.text} at ${formatReminderTime(habit.reminderHour, habit.reminderMinute)}`);
+        }
+
+        // Reschedule all reminders
+        function rescheduleAllReminders() {
+            // Clear all existing timeouts
+            Object.values(reminderTimeouts).forEach(timeout => clearTimeout(timeout));
+            reminderTimeouts = {};
+
+            // Schedule for all habits with reminders
+            habits.forEach(habit => {
+                if (habit.reminder) {
+                    scheduleReminder(habit);
+                }
+            });
+        }
+
+        // ==================== STATE MANAGEMENT ====================
+
+        let habits = JSON.parse(localStorage.getItem('routinely')) || [
+            {id:1,text:'Drink water',streak:5,history:{},schedule:'daily',days:[],restDays:{type:'none',customDays:[]},reminder:false,startDate:new Date(2026,1,1).toDateString()},
+            {id:2,text:'Exercise',streak:3,history:{},schedule:'weekly',days:[1,3,5],restDays:{type:'weekends',customDays:[]},reminder:false,startDate:new Date(2026,1,5).toDateString()},
+            {id:3,text:'Read',streak:7,history:{},schedule:'daily',days:[],restDays:{type:'none',customDays:[]},reminder:false,startDate:new Date(2026,1,10).toDateString()}
+        ];
+        
+        // Add some history for demo
+        let d = new Date();
+        for(let i=0; i<90; i++){
+            let date = new Date(d); date.setDate(d.getDate()-i);
+            habits[0].history[date.toDateString()] = Math.random() > 0.3;
+            habits[1].history[date.toDateString()] = Math.random() > 0.5;
+            habits[2].history[date.toDateString()] = Math.random() > 0.4;
+        }
+        
+        let editingId = null;
+        let openHabitId = null;
+        let habitCalendars = {};
+        let charts = {};
+        let chartTypes = {};
+
+        function dateStr(d){ return d.toDateString(); }
+        function save(){ 
+            localStorage.setItem('routinely',JSON.stringify(habits)); 
+            rescheduleAllReminders(); // Reschedule reminders after save
+        }
+
+        function isActive(habit, date){
+            if(habit.schedule==='daily') return true;
+            if(habit.schedule==='weekly') return habit.days.includes(date.getDay());
+            if(habit.schedule==='monthly') return habit.days.includes(date.getDate());
+            return true;
+        }
+
+        function isRestDay(habit, date){
+            if(!habit.restDays) return false;
+            
+            if(habit.restDays.type === 'weekends') {
+                return [0,6].includes(date.getDay());
+            }
+            
+            if(habit.restDays.type === 'custom' && habit.restDays.customDays) {
+                return habit.restDays.customDays.includes(date.getDay());
+            }
+            
+            return false;
+        }
+
+        function updateStreak(habit){
+            let streak = 0;
+            let today = new Date();
+            let checkDate = new Date(today);
+            let startDate = habit.startDate ? new Date(habit.startDate) : new Date(2020,0,1);
+            
+            while(checkDate >= startDate){
+                let key = dateStr(checkDate);
+                
+                if(isActive(habit, checkDate) && !isRestDay(habit, checkDate)){
+                    if(habit.history?.[key]){
+                        streak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                } else {
+                    checkDate.setDate(checkDate.getDate() - 1);
+                }
+            }
+            
+            habit.streak = streak;
+            return habit;
+        }
+
+        function toggleHabit(id, date){
+            habits = habits.map(h => {
+                if(h.id === id){
+                    if(!h.history) h.history = {};
+                    h.history[dateStr(date)] = !h.history[dateStr(date)];
+                    return updateStreak(h);
+                }
+                return h;
+            });
+            save();
+            renderHabits();
+            if(openHabitId === id) renderHabitCalendar(id);
+        }
+
+        // Mark today as done for a habit
+        function markTodayDone(id){
+            toggleHabit(id, new Date());
+        }
+
+        // Toggle habit dropdown
+        function toggleHabitDropdown(id){
+            if(openHabitId === id){
+                openHabitId = null;
+            } else {
+                openHabitId = id;
+                if(!habitCalendars[id]) {
+                    habitCalendars[id] = new Date();
+                }
+                if(!chartTypes[id]) {
+                    chartTypes[id] = 'week';
+                }
+            }
+            renderHabits();
+        }
+
+        function setChartType(habitId, type){
+            chartTypes[habitId] = type;
+            renderHabitCalendar(habitId);
+        }
+
+        function isBeforeStartDate(habit, date){
+            if(!habit.startDate) return false;
+            let startDate = new Date(habit.startDate);
+            startDate.setHours(0,0,0,0);
+            let checkDate = new Date(date);
+            checkDate.setHours(0,0,0,0);
+            return checkDate < startDate;
+        }
+
+        // Get weekly chart data (last 7 days from today)
+        function getWeeklyChartData(habit){
+            let labels = [];
+            let data = [];
+            
+            for(let i=6; i>=0; i--){
+                let date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('default',{weekday:'short'}));
+                data.push(habit.history?.[dateStr(date)] ? 1 : 0);
+            }
+            
+            return { labels, data };
+        }
+
+        // Get monthly chart data (selected month)
+        function getMonthlyChartData(habit, year, month){
+            let labels = [];
+            let data = [];
+            let daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            for(let d = 1; d <= daysInMonth; d++){
+                let date = new Date(year, month, d);
+                labels.push(d);
+                data.push(habit.history?.[dateStr(date)] ? 1 : 0);
+            }
+            
+            return { labels, data };
+        }
+
+        function renderHabitCalendar(habitId){
+            let habit = habits.find(h => h.id === habitId);
+            if(!habit) return;
+            
+            let container = document.getElementById(`calendar-${habitId}`);
+            if(!container) return;
+            
+            let date = habitCalendars[habitId] || new Date();
+            let year = date.getFullYear(), month = date.getMonth();
+            
+            let firstDay = new Date(year,month,1).getDay();
+            let lastDate = new Date(year,month+1,0).getDate();
+            let today = new Date();
+            let startDate = habit.startDate ? new Date(habit.startDate) : null;
+            
+            let doneCount = 0, missedCount = 0;
+            
+            // Calendar Grid
+            let daysHtml = '<div class="calendar-grid">';
+            for(let i=0; i<firstDay; i++) daysHtml += '<div class="calendar-day"></div>';
+            
+            for(let d=1; d<=lastDate; d++){
+                let dateObj = new Date(year,month,d);
+                let cls = 'calendar-day';
+                let disabled = false;
+                
+                let dateNumber = d;
+                
+                if(dateObj.toDateString() === today.toDateString()) cls += ' today';
+                
+                let isStart = startDate && dateObj.toDateString() === startDate.toDateString();
+                if(isStart){
+                    cls += ' start-date';
+                }
+                
+                if(startDate && isBeforeStartDate(habit, dateObj)){
+                    cls += ' disabled';
+                    disabled = true;
+                }
+                
+                if(!disabled && dateObj <= today && (!startDate || dateObj >= startDate)){
+                    if(isRestDay(habit, dateObj)){
+                        cls += ' rest';
+                    } else if(isActive(habit, dateObj)){
+                        if(habit.history?.[dateStr(dateObj)]){
+                            cls += ' completed';
+                            if(dateObj >= startDate) doneCount++;
+                        } else {
+                            cls += ' missed';
+                            if(dateObj >= startDate) missedCount++;
+                        }
+                    }
+                }
+                
+                if(disabled){
+                    daysHtml += `<div class="${cls}">${dateNumber}</div>`;
+                } else {
+                    daysHtml += `<div class="${cls}" onclick="toggleHabit(${habitId}, new Date(${year},${month},${d}))">${dateNumber}</div>`;
+                }
+            }
+            daysHtml += '</div>';
+            
+            // Get chart data based on selected type
+            let chartData;
+            let chartTitle;
+            
+            if(chartTypes[habitId] === 'week'){
+                chartData = getWeeklyChartData(habit);
+                chartTitle = 'Last 7 Days';
+            } else {
+                chartData = getMonthlyChartData(habit, year, month);
+                chartTitle = `${date.toLocaleString('default',{month:'long'})} ${year}`;
+            }
+            
+            // Stats for selected month
+            let monthStart = new Date(year, month, 1);
+            let monthEnd = new Date(year, month + 1, 0);
+            let monthDone = 0, monthTotal = 0;
+            
+            for(let d = 1; d <= lastDate; d++){
+                let dateObj = new Date(year, month, d);
+                if(!startDate || dateObj >= startDate){
+                    if(dateObj <= today && isActive(habit, dateObj) && !isRestDay(habit, dateObj)){
+                        monthTotal++;
+                        if(habit.history?.[dateStr(dateObj)]) monthDone++;
+                    }
+                }
+            }
+            
+            let monthRate = monthTotal > 0 ? Math.round((monthDone/monthTotal)*100) : 0;
+            
+            let html = `
+                <div class="split-view">
+                    <!-- Left Side - Calendar -->
+                    <div class="calendar-side">
+                        <div class="month-nav">
+                            <button class="month-btn" onclick="changeMonth(${habitId}, -1)">←</button>
+                            <span class="month-title">${date.toLocaleString('default',{month:'short'})} ${year}</span>
+                            <button class="month-btn" onclick="changeMonth(${habitId}, 1)">→</button>
+                        </div>
+                        <div class="weekdays">
+                            <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                        </div>
+                        ${daysHtml}
+                        ${startDate ? '<div style="font-size:10px; color:#fbbf24; margin-top:5px;"><span>★</span> Start date (yellow border)</div>' : ''}
+                        ${startDate ? '<div style="font-size:10px; color:#999; margin-top:2px;">Gray dates = before start (cannot edit)</div>' : ''}
+                    </div>
+                    
+                    <!-- Right Side - Chart -->
+                    <div class="charts-side">
+                        <div class="chart-selector">
+                            <div class="chart-option ${chartTypes[habitId]==='week'?'active':''}" onclick="setChartType(${habitId}, 'week')">Week</div>
+                            <div class="chart-option ${chartTypes[habitId]==='month'?'active':''}" onclick="setChartType(${habitId}, 'month')">Month</div>
+                        </div>
+                        <div class="chart-title">${chartTitle}</div>
+                        <div class="chart-container">
+                            <canvas id="chart-${habitId}"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dropdown-stats">
+                    <div class="stat-card"><div class="stat-value">${monthRate}%</div><div class="stat-label">This Month</div></div>
+                    <div class="stat-card"><div class="stat-value">${monthDone}</div><div class="stat-label">Done</div></div>
+                    <div class="stat-card"><div class="stat-value">${monthTotal - monthDone}</div><div class="stat-label">Missed</div></div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            // Create Chart
+            setTimeout(() => {
+                let ctx = document.getElementById(`chart-${habitId}`)?.getContext('2d');
+                if(ctx){
+                    if(charts[habitId]) charts[habitId].destroy();
+                    
+                    let backgroundColor = chartData.data.map(val => 
+                        val === 1 ? 'rgba(72, 187, 120, 0.7)' : 'rgba(245, 101, 101, 0.7)'
+                    );
+                    
+                    charts[habitId] = new Chart(ctx, {
+                        type:'bar',
+                        data:{
+                            labels:chartData.labels,
+                            datasets:[{
+                                data:chartData.data,
+                                backgroundColor:backgroundColor,
+                                borderRadius:4,
+                                barPercentage:0.7,
+                                categoryPercentage:0.8
+                            }]
+                        },
+                        options:{
+                            responsive:true,
+                            maintainAspectRatio:false,
+                            plugins:{
+                                legend:{display:false},
+                                tooltip:{
+                                    callbacks:{
+                                        label:(context) => {
+                                            return context.raw === 1 ? 'Completed' : 'Missed';
+                                        }
+                                    }
+                                }
+                            },
+                            scales:{
+                                x:{
+                                    grid:{display:false},
+                                    ticks:{
+                                        maxRotation:0,
+                                        font:{size:9}
+                                    }
+                                },
+                                y:{
+                                    display:false,
+                                    min:0,
+                                    max:1,
+                                    grid:{display:false}
+                                }
+                            }
+                        }
+                    });
+                }
+            }, 50);
+        }
+
+        function changeMonth(habitId, direction){
+            if(habitCalendars[habitId]){
+                habitCalendars[habitId].setMonth(habitCalendars[habitId].getMonth() + direction);
+                renderHabitCalendar(habitId);
+            }
+        }
+
+        // ==================== RENDER HABITS FUNCTION (FIXED) ====================
+        function renderHabits(){
+            let html = '';
+            habits.forEach(h => {
+                let todayDone = h.history?.[dateStr(new Date())];
+                let reminderText = '';
+                if (h.reminder && h.reminderHour !== undefined) {
+                    reminderText = ` ${formatReminderTime(h.reminderHour, h.reminderMinute)}`;
+                }
+                
+                let restTypeText = '';
+                if (h.restDays?.type === 'custom') {
+                    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    const customDays = h.restDays.customDays?.map(d => dayNames[d]).join(',') || '';
+                    restTypeText = ` (${customDays})`;
+                } else if (h.restDays?.type === 'weekends') {
+                    restTypeText = ' (Weekends)';
+                }
+                
+                html += `
+                    <div class="habit-item ${openHabitId===h.id?'selected':''}">
+                        <div class="habit-header" onclick="toggleHabitDropdown(${h.id})">
+                            <span class="habit-name">${h.text}</span>
+                            <div class="habit-details">
+                                <span class="badge streak">🔥 ${h.streak}</span>
+                                <span class="badge schedule">${h.schedule}</span>
+                                ${h.restDays.type!=='none'?`<span class="badge rest">Rest${restTypeText}</span>`:''}
+                                ${h.reminder?`<span class="badge reminder">⏰${reminderText}</span>`:''}
+                            </div>
+                            <div class="habit-actions" onclick="event.stopPropagation()">
+                                <button class="mark-done ${todayDone?'completed':''}" onclick="markTodayDone(${h.id})">${todayDone?'✓':'○'}</button>
+                                <button class="edit" onclick="startEdit(${h.id})">Edit</button>
+                                <button class="delete" onclick="deleteHabit(${h.id})">Delete</button>
+                            </div>
+                        </div>
+                        <div class="calendar-dropdown ${openHabitId===h.id?'show':''}" id="calendar-${h.id}"></div>
+                    </div>
+                `;
+            });
+            document.getElementById('habitList').innerHTML = html || '<div class="empty">✨ Add habits</div>';
+            
+            if(openHabitId){
+                renderHabitCalendar(openHabitId);
+            }
+        }
+
+        // CRUD
+        window.deleteHabit = (id) => { 
+            habits = habits.filter(h => h.id !== id); 
+            if(openHabitId === id) openHabitId = null;
+            save(); 
+            renderHabits(); 
+        };
+        
+        window.startEdit = (id) => { 
+            let h = habits.find(h => h.id === id);
+            if(h){
+                editingId = id;
+                document.getElementById('modalTitle').textContent = 'Edit Habit';
+                document.getElementById('habitName').value = h.text;
+                document.querySelector(`input[value="${h.schedule}"]`).checked = true;
+                document.getElementById('weeklySelector').style.display = h.schedule==='weekly'?'block':'none';
+                document.getElementById('monthlySelector').style.display = h.schedule==='monthly'?'block':'none';
+                if(h.schedule === 'weekly' && h.days){
+                    document.querySelectorAll('#weeklySelector input').forEach(cb => cb.checked = h.days.includes(parseInt(cb.value)));
+                }
+                if(h.schedule === 'monthly' && h.days){
+                    document.querySelectorAll('#monthlySelector input').forEach(cb => cb.checked = h.days.includes(parseInt(cb.value)));
+                }
+                
+                // Set rest days
+                document.getElementById('restType').value = h.restDays?.type || 'none';
+                if (h.restDays?.type === 'custom' && h.restDays.customDays) {
+                    document.querySelectorAll('#customDaysSelector input[type="checkbox"]').forEach(cb => {
+                        cb.checked = h.restDays.customDays.includes(parseInt(cb.value));
+                    });
+                }
+                document.getElementById('customDaysSelector').style.display = h.restDays?.type === 'custom' ? 'block' : 'none';
+                
+                // Set reminder values
+                document.getElementById('reminderToggle').checked = h.reminder || false;
+                document.getElementById('reminderHour').value = h.reminderHour || '';
+                document.getElementById('reminderMinute').value = h.reminderMinute || '';
+                document.getElementById('reminderSettings').style.display = h.reminder ? 'block' : 'none';
+                
+                updateRestLogic();
+                modal.classList.add('active');
+                setTimeout(() => document.getElementById('habitName').focus(), 100);
+            }
+        };
+
+        // Modal
+        let modal = document.getElementById('modal');
+        document.getElementById('addBtn').onclick = () => {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'New Habit';
+            document.getElementById('habitName').value = '';
+            document.getElementById('daily').checked = true;
+            document.getElementById('weeklySelector').style.display = 'none';
+            document.getElementById('monthlySelector').style.display = 'none';
+            document.getElementById('restType').value = 'none';
+            document.getElementById('customDaysSelector').style.display = 'none';
+            document.querySelectorAll('#customDaysSelector input[type="checkbox"]').forEach(cb => cb.checked = false);
+            
+            // Reset reminder
+            document.getElementById('reminderToggle').checked = false;
+            document.getElementById('reminderHour').value = '';
+            document.getElementById('reminderMinute').value = '';
+            document.getElementById('reminderSettings').style.display = 'none';
+            
+            updateRestLogic();
+            modal.classList.add('active');
+            setTimeout(() => document.getElementById('habitName').focus(), 100);
+        };
+        
+        document.getElementById('cancelBtn').onclick = () => modal.classList.remove('active');
+        
+        document.getElementById('saveBtn').onclick = saveHabit;
+
+        // Toggle reminder settings
+        document.getElementById('reminderToggle').addEventListener('change', (e) => {
+            document.getElementById('reminderSettings').style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        // Rest type change handler
+        document.getElementById('restType').addEventListener('change', (e) => {
+            const isCustom = e.target.value === 'custom';
+            document.getElementById('customDaysSelector').style.display = isCustom ? 'block' : 'none';
+            updateRestLogic();
+        });
+
+        // Update rest logic text
+        function updateRestLogic(){
+            let type = document.getElementById('restType').value;
+            let text = '';
+            
+            if (type === 'none') {
+                text = 'No rest days - all days count toward streak';
+            } else if (type === 'weekends') {
+                text = 'Rest on Saturdays and Sundays - streak continues on rest days';
+            } else if (type === 'custom') {
+                const selected = [];
+                document.querySelectorAll('#customDaysSelector input:checked').forEach(cb => {
+                    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    selected.push(dayNames[parseInt(cb.value)]);
+                });
+                if (selected.length === 0) {
+                    text = 'Select custom rest days above';
+                } else {
+                    text = `Rest on ${selected.join(', ')} - streak continues on rest days`;
+                }
+            }
+            
+            document.getElementById('restLogic').textContent = text;
+        }
+
+        // Add change listeners for custom days checkboxes
+        document.querySelectorAll('#customDaysSelector input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', updateRestLogic);
+        });
+
+        // Populate minute selector with all minutes (0-59)
+        function populateMinutes() {
+            const minuteSelect = document.getElementById('reminderMinute');
+            minuteSelect.innerHTML = '<option value="">Minute</option>';
+            for (let i = 0; i < 60; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i.toString().padStart(2, '0');
+                minuteSelect.appendChild(option);
+            }
+        }
+        populateMinutes();
+
+        // Save habit function
+        function saveHabit() {
+            let text = document.getElementById('habitName').value.trim();
+            if(!text) {
+                alert('Please enter a habit name');
+                document.getElementById('habitName').focus();
+                return;
+            }
+            
+            let schedule = document.querySelector('input[name="schedule"]:checked').value;
+            let days = [];
+            if(schedule === 'weekly'){
+                document.querySelectorAll('#weeklySelector input:checked').forEach(cb => days.push(parseInt(cb.value)));
+            }
+            if(schedule === 'monthly'){
+                document.querySelectorAll('#monthlySelector input:checked').forEach(cb => days.push(parseInt(cb.value)));
+            }
+            
+            // Get rest days
+            let restType = document.getElementById('restType').value;
+            let customDays = [];
+            if (restType === 'custom') {
+                document.querySelectorAll('#customDaysSelector input:checked').forEach(cb => {
+                    customDays.push(parseInt(cb.value));
+                });
+            }
+            
+            // Get reminder settings
+            let reminder = document.getElementById('reminderToggle').checked;
+            let reminderHour = reminder ? parseInt(document.getElementById('reminderHour').value) : undefined;
+            let reminderMinute = reminder ? parseInt(document.getElementById('reminderMinute').value) : undefined;
+            
+            // Validate reminder time
+            if (reminder && (isNaN(reminderHour) || isNaN(reminderMinute))) {
+                alert('Please select both hour and minute for reminder');
+                return;
+            }
+            
+            let habitData = {
+                text, schedule, days,
+                restDays: {
+                    type: restType,
+                    customDays: customDays
+                },
+                reminder: reminder,
+                reminderHour: reminderHour,
+                reminderMinute: reminderMinute,
+                history: {}, 
+                streak: 0,
+                startDate: new Date().toDateString()
+            };
+            
+            if(editingId){
+                let original = habits.find(h => h.id === editingId);
+                habitData.startDate = original.startDate;
+                habitData.history = original.history;
+                habits = habits.map(h => h.id === editingId ? {...habitData, id:h.id} : h);
+            } else {
+                habits.push({id:Date.now(), ...habitData});
+            }
+            
+            habits = habits.map(h => updateStreak(h));
+            save(); // This will also reschedule reminders
+            modal.classList.remove('active');
+            renderHabits();
+        }
+
+        // Schedule toggle
+        document.querySelectorAll('input[name="schedule"]').forEach(r => {
+            r.addEventListener('change', e => {
+                document.getElementById('weeklySelector').style.display = e.target.value==='weekly'?'block':'none';
+                document.getElementById('monthlySelector').style.display = e.target.value==='monthly'?'block':'none';
+            });
+        });
+
+        // Populate month days
+        for(let i=1; i<=31; i++){
+            document.getElementById('monthDays').innerHTML += `<div><input type="checkbox" id="md${i}" value="${i}"><label>${i}</label></div>`;
+        }
+
+        window.changeMonth = changeMonth;
+        window.setChartType = setChartType;
+
+        // ==================== ENTER KEY SUPPORT ====================
+
+        // Global keyboard handler
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                modal.classList.remove('active');
+            }
+            
+            if (e.key === 'Enter' && modal.classList.contains('active')) {
+                if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    saveHabit();
+                }
+            }
+        });
+
+        // Enter key in habit name input (modal)
+        document.getElementById('habitName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveHabit();
+            }
+        });
+
+        // Enter key on main "Create New Habit" button
+        document.getElementById('addBtn').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('addBtn').click();
+            }
+        });
+
+        // Make all buttons focusable and support Enter key
+        document.querySelectorAll('button').forEach(button => {
+            button.setAttribute('tabindex', '0');
+            button.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    button.click();
+                }
+            });
+        });
+
+        // Support Enter key on dynamically created calendar days
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.classList.contains('calendar-day') && !e.target.classList.contains('disabled')) {
+                e.preventDefault();
+                e.target.click();
+            }
+        });
+
+        // Support Enter key on chart options
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.classList.contains('chart-option')) {
+                e.preventDefault();
+                e.target.click();
+            }
+        });
+
+        // Support Enter key on close button
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.classList.contains('close-calendar')) {
+                e.preventDefault();
+                e.target.click();
+            }
+        });
+
+        // Initial render and reminder scheduling
+        renderHabits();
+        
+        // Request notification permission and schedule reminders
+        if (Notification.permission === 'granted') {
+            rescheduleAllReminders();
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    rescheduleAllReminders();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
